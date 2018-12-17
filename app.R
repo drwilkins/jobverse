@@ -10,10 +10,10 @@ jobs<-read.csv("data/BLSjobdata.csv",as.is=c(1,21),strip.white=F,stringsAsFactor
 #    http://shiny.rstudio.com/
 #
 
-library(shiny); require(collapsibleTree)
+library(shiny); require(collapsibleTree); require(shinythemes)
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- fluidPage(theme=shinytheme("journal"),
    
    # Application title
    titlePanel("The Jobverse: Explore the Possibilities"),
@@ -25,17 +25,20 @@ ui <- fluidPage(
      fluidRow(
        column(1),
        column(style = "border: 5px solid black;",10,
-      collapsibleTreeOutput("jobtree",height="600px") ),
-       column(1) ),
+      collapsibleTreeOutput("jobtree"),
+         tags$div(HTML(paste0("Source: ",tags$a(href="https://www.bls.gov/emp/tables/occupational-projections-and-characteristics.htm","US Bureau of Labor & Statistics"))))),
+       column(1)),
   br(),
   hr(),
    # Sidebar with a slider input for number of bins 
    fluidRow(
     
-     column(4,
+     column(2,
        wellPanel(
        sliderInput("branchL","Branch Length:", ticks=F,
-                     min = 100,max = 800,value = 350)
+                     min = 100,max = 800,value = 350),
+       sliderInput("plotH","Plot Height:",ticks=F,
+                    min=300,max=1000,value=600)
     
      
    )
