@@ -1,10 +1,10 @@
-require(stringr);require(RColorBrewer)
+require(stringr);require(RColorBrewer);require(colorRamps)
 #Convert gnarly Bureau of Labor Statistics file for use as a network
 jorbs<-read.csv("data/occupation_Table1.7.csv",strip.white=T,stringsAsFactors = F)
 #reduce wordiness
 jorbs$title<-sub(" occupations", "", jorbs$title,fixed=T,jorbs$title)
 #make shorter titles (max 3 in a series:  x, y, z, etc)
-jorbs$ttl<-sapply(jorbs$title,function(x) str_replace(x,"(([^,]+,){2}).+","\\1 etc"))
+jorbs$title<-sapply(jorbs$title,function(x) str_replace(x,"(([^,]+,){2}).+","\\1 etc"))
 
 # #There's some stupid pseudohierarchy, so all "line items" should be tips
 # sum(jorbs$Hierarchy==4)
@@ -25,16 +25,16 @@ level4vec<-which(jorbs$Hierarchy==4)
 #for each 1st level, repeat it, up to one bf next 1st level, unless it's the last one
 #in that case, repeat up to end of the dataframe
 for (i in 1:length(level1vec)){
-  category<-jorbs$ttl[level1vec[i]]
+  category<-jorbs$title[level1vec[i]]
   if(i==length(level1vec)){
   jorbs$Level1[level1vec[i]:nrow(jorbs)]<-category}else{
     jorbs$Level1[level1vec[i]:(level1vec[i+1]-1)]<-category
 }}
-subset(jorbs,select=c("ttl","Hierarchy","Level1"))[1:20,]#test
+subset(jorbs,select=c("title","Hierarchy","Level1"))[1:20,]#test
   
 #Do the same thing for 2nd level
 for (i in 1:length(level2vec)){
-  category<-jorbs$ttl[level2vec[i]]
+  category<-jorbs$title[level2vec[i]]
   if(i==length(level2vec)){ #If this is the last segment, build to the end of the df
   jorbs$Level2[level2vec[i]:nrow(jorbs)]<-category}else{
     #otherwise, figure out the segment for filling down level hierarchy
@@ -44,11 +44,11 @@ for (i in 1:length(level2vec)){
       }else{ #otherwise, fill "category" down
     jorbs$Level2[level2vec[i]:(transition-1)]<-category
   }}}
-cbind(jorbs$ttl,jorbs$Hierarchy,paste(jorbs$Level1,jorbs$Level2,sep="/ "))[1:20,]#test
+cbind(jorbs$title,jorbs$Hierarchy,paste(jorbs$Level1,jorbs$Level2,sep="/ "))[1:20,]#test
 
 #Do the same thing for 3rd level
 for (i in 1:length(level3vec)){
-  category<-jorbs$ttl[level3vec[i]]
+  category<-jorbs$title[level3vec[i]]
   if(i==length(level3vec)){ #If this is the last segment, build to the end of the df
   jorbs$Level3[level3vec[i]]<-category}else{
     #otherwise, figure out the segment for filling down level hierarchy
@@ -58,11 +58,11 @@ for (i in 1:length(level3vec)){
       }else{ #otherwise, fill "category" down
     jorbs$Level3[level3vec[i]:(transition-1)]<-category
   }}}
-cbind(jorbs$ttl,jorbs$Hierarchy,paste(jorbs$Level1,jorbs$Level2,jorbs$Level3,sep="/ "))[1:20,]#test
+cbind(jorbs$title,jorbs$Hierarchy,paste(jorbs$Level1,jorbs$Level2,jorbs$Level3,sep="/ "))[1:20,]#test
 
 #Do the same thing for 4th level
 for (i in 1:length(level4vec)){
-  category<-jorbs$ttl[level4vec[i]]
+  category<-jorbs$title[level4vec[i]]
   if(i==length(level4vec)){ #If this is the last segment, build to the end of the df
   jorbs$Level4[level4vec[i]]<-category}else{
     #otherwise, figure out the segment for filling down level hierarchy
@@ -74,14 +74,14 @@ for (i in 1:length(level4vec)){
         jorbs$Level4[level4vec[i]:(transition-1)]<-category
       }}}
 
-cbind(jorbs$ttl,jorbs$Hierarchy,paste(jorbs$Level1,jorbs$Level2,jorbs$Level3,jorbs$Level4,sep="/ "))[29:35,]#test
+cbind(jorbs$title,jorbs$Hierarchy,paste(jorbs$Level1,jorbs$Level2,jorbs$Level3,jorbs$Level4,sep="/ "))[29:35,]#test
 
 jorbs$pathString<-paste(jorbs$Level0,jorbs$Level1,jorbs$Level2,jorbs$Level3,jorbs$Level4,sep="/")
 
 #Get rid of NAs
 jorbs$pathString<-sapply(jorbs$pathString,function(x) gsub("/NA","",x),USE.NAMES = F)
 
-jorbs2<-jorbs[,c("ttl","Occupation.type","Hierarchy","pathString")]
+jorbs2<-jorbs[,c("title","Occupation.type","Hierarchy","pathString")]
 write.csv(jorbs2,"data/jobtree_just hierarchy2.csv")
 
 require(data.tree)
@@ -93,7 +93,19 @@ require(collapsibleTree)
 jobcol.pal<-c(brewer.pal(9,name="Set1"),brewer.pal(8,name="Dark2"),brewer.pal(5,name="Accent"))
 joblvls<-unique(jorbs[-1,]$Level1)
 jorbs$jobcol<-jobcol.pal[match(jorbs$Level1,joblvls)]
-jorbs$jobcol[1:2]<-"white"
+jorbs$jobcol[1]<-"white"
+
+#color by %change
+percentchg<-jorbs$ChgEmploy.2016to26.Perc
+mybreaks<-c(-110,-50, -25, -12.5,-6.25,-3.125,-1.0625,0,1.0625,3.125,6.25,12.5,25,50,110)
+jorbs$percentchg.indx<-as.numeric(cut(percentchg,mybreaks))
+jobpalette<-blue2red(length(mybreaks))
+jorbs$percentchg.col<-blue2red(length(mybreaks))[jorbs$percentchg.ind]
+#test palette
+plot(1:length(mybreaks),1:length(mybreaks),pch=19,col=jobpalette)
+#check colors
+plot(1:1091,jorbs$ChgEmploy.2016to26.Perc,pch=19,col=jorbs$percentchg.col)
+
 #****************************
 
 
