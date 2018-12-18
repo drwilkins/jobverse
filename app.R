@@ -42,7 +42,7 @@ ui <- fluidPage(theme=shinytheme("journal"),
                     min=300,max=1000,value=400)
        ),
     column(2,
-      radioButtons("colorby","Color nodes by:",choiceValues=c("cat","chgemp"),selected="cat",choiceNames = c("Job Type","Expected %Change in Employment"))))
+      radioButtons("colorby","Color nodes by:",choiceValues=c("none","cat","chgemp"),selected="none",choiceNames = c("None","Job Type","Expected %Change in Employment"))))
     
      
    )
@@ -58,9 +58,9 @@ server <- function(input, output) {
    output$jobtree <- renderCollapsibleTree({
      
      #determines which color column to use from user input
-     colorscheme=switch(input$colorby,cat=jobs$jobcol,chgemp=jobs$percentchg.col)
+     colorscheme=switch(input$colorby,none="slateblue",cat=jobs$jobcol,chgemp=jobs$percentchg.col)
      
-     collapsibleTree(jobs,hierarchy=c("Level1","Level2","Level3","Level4"),zoomable=T,collapsed=T,nodeSize = "leafCount",linkLength = input$branchL,tooltip=T,root="TheJobverse",fill = colorscheme[-1],fillByLevel = F, inputId = "node")})
+     collapsibleTree(jobs[-1,],hierarchy=c("Level1","Level2","Level3","Level4"),zoomable=T,collapsed=T,nodeSize = "leafCount",linkLength = input$branchL,tooltip=T,root="TheJobverse",fill = colorscheme,fillByLevel = F, inputId = "node")}) 
    
    
 #Table Output   
