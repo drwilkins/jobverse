@@ -10,7 +10,7 @@ jobs<-read.csv("data/BLSjobdata.csv",as.is=c(1,20,22),strip.white=F,stringsAsFac
 #    http://shiny.rstudio.com/
 #
 
-library(shiny); require(collapsibleTree); require(shinythemes);require(DT);require(htmltools)
+library(shiny); require(collapsibleTree); require(shinythemes);require(DT);require(htmltools); require(colorRamps)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme=shinytheme("journal"),
@@ -57,10 +57,15 @@ server <- function(input, output) {
 #Tree Output  
    output$jobtree <- renderCollapsibleTree({
      
+#!!!!
+#There's something whack with the indexing here (it always expects 1093 fill values, but there's only 1091 obs, so I added "white", but this pushes everything off, so...What to do?)
      #determines which color column to use from user input
-     colorscheme=switch(input$colorby,none="slateblue",cat=jobs$jobcol,chgemp=jobs$percentchg.col)
+     colorscheme=switch(input$colorby,none="slateblue",cat=c(jobs$jobcol,"white","white"),chgemp=c(jobs$percentchg.col,"white","white") )
+#!!!!!!!!       
+       
+       
      
-     collapsibleTree(jobs[-1,],hierarchy=c("Level1","Level2","Level3","Level4"),zoomable=T,collapsed=T,nodeSize = "leafCount",linkLength = input$branchL,tooltip=T,root="TheJobverse",fill = colorscheme,fillByLevel = F, inputId = "node")}) 
+     collapsibleTree(jobs,hierarchy=c("Level1","Level2","Level3","Level4"),zoomable=T,collapsed=T,nodeSize = "leafCount",linkLength = input$branchL,tooltip=T,root="TheJobverse",fill = colorscheme,fillByLevel = F, inputId = "node")}) 
    
    
 #Table Output   
